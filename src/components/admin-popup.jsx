@@ -1,39 +1,26 @@
 import {useState} from "react";
-import {Button, Drawer, MenuItem, Select, TextField} from "@mui/material";
+import {Box, Button, Drawer, InputLabel, MenuItem, Select, TextField} from "@mui/material";
 import toast from "react-hot-toast";
 import {createPrompt, fetchPrompts, removeCurrentPosition} from "../store/slices/index.js";
 import {useDispatch, useSelector} from "react-redux";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
-import {storage} from "../firebase/index.js";
-
-
-const loadImageToServer = async ({ file, place }) => {
-  const currentRef = ref(storage, `${place}/` + file.name);
-  try {
-    await uploadBytes(currentRef, file);
-    return await getDownloadURL(currentRef)
-  } catch (e) {
-    toast.error(e.message)
-    return e;
-  }
-}
+import {Uploader} from "./ui/uploader.jsx";
 
 export const AdminPopup = ({open, onClose}) => {
   const dispatch = useDispatch()
-  const { currentPosition, user } = useSelector(state => state.main)
+  const {currentPosition, user} = useSelector(state => state.main)
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState('Средний')
   const [images, setImages] = useState([])
 
-  const onCreateComplaint = () => {
+  const onCreateComplaint = async () => {
     if (!description || !title) {
-      toast.error('Напишите жалобу!')
+      toast.error('Не все поля заполнены!')
       return
     }
 
-    dispatch(createPrompt({
+    await dispatch(createPrompt({
       id: Date.now(),
       title,
       description,
@@ -41,24 +28,12 @@ export const AdminPopup = ({open, onClose}) => {
       user,
       position: currentPosition,
       images,
-    }))
+    })).unwrap()
     dispatch(removeCurrentPosition())
     dispatch(fetchPrompts())
     onClose()
-    toast.success('Жалоба оставлена!')
   }
 
-  const handleUploadImage = async (event) => {
-    if (!event.target.files[0]) return;
-
-    try {
-      const url = await loadImageToServer({ file: event.target.files[0], place: '' });
-      setImages([...images, url]);
-      toast.success('Изображение загружено!');
-    } catch (error) {
-      toast.error('Не удалось загрузить изображение!');
-    }
-  };
 
   const handleChange = (event) => {
     setPriority(event.target.value);
@@ -72,39 +47,83 @@ export const AdminPopup = ({open, onClose}) => {
       open={open}
       onClose={onClose}
     >
-      Приоритет
-      <Select
-        labelId="demo-simple-select-label"
-        id="demo-simple-select"
-        value={priority}
-        label="Age"
-        onChange={handleChange}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '5px 15px',
+          gap: '10px',
+          marginY: 2
+        }}
       >
-        <MenuItem value="Низкий">Низкий</MenuItem>
-        <MenuItem value="Средний">Средний</MenuItem>
-        <MenuItem value="Высокий">Высокий</MenuItem>
-      </Select>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <InputLabel htmlFor="prompt-title">Заголовок</InputLabel>
+          <TextField
+            size="small"
+            id="prompt-title"
+            placeholder="Заголовок"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
+        </Box>
 
-      <TextField
-        placeholder="Заголовок"
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-      />
-      <TextField
-        placeholder="Оставить жалобу"
-        value={description}
-        onChange={e => setDescription(e.target.value)}
-      />
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <InputLabel htmlFor="prompt-description">Описание</InputLabel>
+          <TextField
+            multiline
+            rows={3}
+            size="small"
+            id="prompt-description"
+            placeholder="Оставить напоминание"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+          />
+        </Box>
 
-      <input type="file" onChange={handleUploadImage} />
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <InputLabel htmlFor="prompt-select">Приоритет</InputLabel>
+          <Select
+            size="small"
+            id="prompt-select"
+            value={priority}
+            label="Age"
+            onChange={handleChange}
+          >
+            <MenuItem value="Низкий">Низкий <span style={{ background: 'blue', borderRadius: '50%', width: 15, height: 15, marginLeft: 'auto' }} /></MenuItem>
+            <MenuItem value="Средний">Средний <span style={{ background: 'yellow', borderRadius: '50%', width: 15, height: 15, marginLeft: 'auto' }} /></MenuItem>
+            <MenuItem value="Высокий">Высокий <span style={{ background: 'red', borderRadius: '50%', width: 15, height: 15, marginLeft: 'auto' }} /></MenuItem>
+          </Select>
+        </Box>
 
-      {images.map((url) => (
-        <img src={url} alt=''/>
-      ))}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <InputLabel htmlFor="prompt-complaint">Загрузить изображения</InputLabel>
+          <Uploader images={images} setImages={setImages} id="prompt-complaint"fiare/>
+        </Box>
 
-      <Button onClick={onCreateComplaint}>
-        Оставить напоминание
-      </Button>
+        <Button variant="contained" onClick={onCreateComplaint}>
+          Оставить напоминание
+        </Button>
+      </Box>
     </Drawer>
   );
 };

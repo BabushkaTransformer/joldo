@@ -1,17 +1,16 @@
 import {Marker, Popup, useMapEvents} from "react-leaflet";
 import {useEffect} from "react";
-import {Button} from "@mui/material";
+import {Button, IconButton} from "@mui/material";
 import {useDispatch, useSelector} from "react-redux";
 import {addCurrentPosition, removeCurrentPosition} from "../store/slices/index.js";
+import {Close} from "@mui/icons-material";
 
-export const LocationMarker = ({onOpen, mode}) => {
+export const LocationMarker = ({onOpen, mode, onClose}) => {
   const dispatch = useDispatch()
   const currentPosition = useSelector(state => state.main.currentPosition)
 
-
   useMapEvents({
     click(e) {
-      console.log(e.target._layers)
       if (mode) {
         dispatch(addCurrentPosition({...e.latlng}))
       }
@@ -26,15 +25,49 @@ export const LocationMarker = ({onOpen, mode}) => {
 
   const openPopup = (marker) => {
     if (marker) {
-      marker.openPopup()
+      setTimeout(() => {
+        marker.openPopup()
+      }, 0)
     }
   }
 
   return currentPosition === null ? null : (
     <Marker position={currentPosition} ref={openPopup}>
       <Popup>
-        {mode === 'complaint' && <Button size='sm' onClick={() => onOpen('complaint')}>Добавить жалобу</Button>}
-        {mode === 'admin' && <Button size='sm' onClick={() => onOpen('admin')}>Добавить что то</Button>}
+        {mode === 'complaint' &&
+          <Button
+            style={{backgroundColor: 'transparent'}}
+            size='small'
+            onClick={() => onOpen('complaint')}>
+            Добавить
+            жалобу
+          </Button>
+        }
+        {mode === 'admin' &&
+          <Button
+            style={{backgroundColor: 'transparent'}}
+            size='small'
+            onClick={() => onOpen('admin')}>
+            Добавить
+            напоминание
+          </Button>
+        }
+
+        <IconButton
+          size="small"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            dispatch(removeCurrentPosition())
+            onClose()
+          }}
+        >
+          <Close sx={{fontSize: 15}}/>
+        </IconButton>
       </Popup>
     </Marker>
   )

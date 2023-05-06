@@ -1,0 +1,33 @@
+
+.uploaded-form{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed #1475cf;
+    width: 100%;
+    cursor: pointer;
+    padding: 15px 15px 5px;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.uploaded-form p {
+    margin: 4px 0px;
+}
+
+.uploaded-row{
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 5px;
+    background-color: #e9f0ff;
+}
+
+.upload-content{
+    display: flex;
+    align-items: center;
+}

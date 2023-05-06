@@ -73,15 +73,19 @@ export const logOut = createAsyncThunk(
 export const fetchComplaints = createAsyncThunk(
   'mainSlice/fetchComplaints',
   async () => {
-    const data = [];
-    const ref = query(collection(firestore, 'complaints'));
-    const querySnapshot = await getDocs(ref);
+    try {
+      const data = [];
+      const ref = query(collection(firestore, 'complaints'));
+      const querySnapshot = await getDocs(ref);
 
-    querySnapshot.forEach((doc) => {
-      data.push({id: doc.id, ...doc.data()});
-    });
+      querySnapshot.forEach((doc) => {
+        data.push({id: doc.id, ...doc.data()});
+      });
 
-    return data;
+      return data;
+    } catch (e) {
+      console.log(e)
+    }
   }
 )
 
@@ -104,7 +108,6 @@ export const createComplaint = createAsyncThunk(
   'mainSlice/fetchComplaints',
   async (complaint) => {
     try {
-      console.log(complaint)
       await addDoc(collection(firestore, 'complaints'), complaint);
       toast.success('Жалоба создана!!')
     } catch (e) {
